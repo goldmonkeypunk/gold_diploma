@@ -18,7 +18,7 @@ export interface SongDTO {
   chord_ids: number[];
 }
 
-/* ──────────────── CRUD + фільтри ──────────────── */
+/* ────────────────   CRUD + фільтри   ──────────────── */
 
 export interface SongFilter {
   search?: string;
@@ -26,36 +26,40 @@ export interface SongFilter {
   chord_id?: number;
 }
 
-/** Отримати список пісень (з фільтрами) */
 export async function getSongs(params: SongFilter = {}) {
   const res = await api.get<SongDTO[]>("/songs", { params });
   return res.data;
 }
 
-/** Отримати одну пісню за ID */
 export async function getSong(id: number) {
   const res = await api.get<SongDTO>(`/songs/${id}`);
   return res.data;
 }
 
-/** Створити нову пісню (ADMIN) */
 export async function createSong(payload: Omit<SongDTO, "id">) {
   const res = await api.post<SongDTO>("/songs", payload);
   return res.data;
 }
 
-/** Оновити існуючу пісню (ADMIN) */
-export async function updateSong(id: number, payload: Partial<Omit<SongDTO, "id">>) {
+export async function updateSong(
+  id: number,
+  payload: Partial<Omit<SongDTO, "id">>
+) {
   const res = await api.patch<SongDTO>(`/songs/${id}`, payload);
   return res.data;
 }
 
-/** Видалити пісню (ADMIN) */
 export async function deleteSong(id: number) {
   await api.delete(`/songs/${id}`);
 }
 
-/* ──────────────── збереження в профіль ──────────────── */
+/* ────────────────   збережене користувачем   ──────────────── */
+
+/** Перелік збережених пісень поточного користувача */
+export async function getSaved() {
+  const res = await api.get<SongDTO[]>("/songs/me/saved");
+  return res.data;
+}
 
 export async function saveSong(id: number) {
   await api.post(`/songs/${id}/save`);
@@ -66,3 +70,4 @@ export async function unsaveSong(id: number) {
 }
 
 export default api;
+м
