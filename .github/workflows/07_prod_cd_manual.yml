@@ -1,1 +1,39 @@
+name: prod-deploy
+
+on:
+  workflow_dispatch:    # запуск вручну
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://your‑prod‑domain.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Manual approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.token }}
+          approvers: your-github-nick
+          minimum-approvals: 1
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
+            docker pull ghcr.io/${{ github.repository }}/backend:${IMAGE_TAG}
+            docker pull ghcr.io/${{ github.repository }}/frontend:${IMAGE_TAG}
+            docker compose -f docker-compose.yml up -d
 
