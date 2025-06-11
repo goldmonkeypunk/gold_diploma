@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from passlib.context import CryptContext
+from pydantic_settings import BaseSettings
 
 SECRET_KEY = "REPLACE_ME_SECRET_32_CHARS"
 ALGORITHM = "HS256"
