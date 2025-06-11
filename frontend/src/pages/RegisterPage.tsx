@@ -12,8 +12,8 @@ export default function RegisterPage() {
     e.preventDefault()
     try {
       await register(username, password)
-      navigate("/") // главное меню
-    } catch (err) {
+      navigate("/")
+    } catch {
       alert("Помилка реєстрації")
     }
   }
