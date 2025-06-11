@@ -1,20 +1,42 @@
-name: lint-test
-on: [push, pull_request]
-jobs:
-  backend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: pip install -r backend/requirements.txt
-      - run: pytest backend/tests
+// frontend/src/pages/Chords/ChordDetailsPage.tsx
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
-        with: { node-version: '20' }
-      - run: npm install --prefix frontend
-      - run: npm run build --prefix frontend
+import { ChordDTO } from "../../api/chords";          // путь поправь при необходимости
+// import LoadingSpinner from "../../components/LoadingSpinner"; // если есть свой спиннер
+
+const ChordDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [chord, setChord] = useState<ChordDTO | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function fetchOne() {
+      try {
+        const { data } = await axios.get<ChordDTO>(`/api/chords/${id}`);
+        setChord(data);
+      } catch (e) {
+        setError("Не удалось загрузить акорд");
+        console.error(e);
+      }
+    }
+
+    fetchOne();
+  }, [id]);
+
+  if (error) return <p className="text-red-600">{error}</p>;
+  if (!chord) return <p>Загрузка…</p>;               // или <LoadingSpinner />
+
+  return (
+    <section className="p-4">
+      <h1 className="text-2xl font-bold mb-4">{chord.name}</h1>
+      <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(chord, null, 2)}</pre>
+      {/* TODO: заменить JSON на нормальное отображение */}
+    </section>
+  );
+};
+
+export default ChordDetailsPage;
