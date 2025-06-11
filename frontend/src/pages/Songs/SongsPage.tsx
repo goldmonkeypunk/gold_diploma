@@ -7,10 +7,10 @@ import {
   saveSong,
   unsaveSong,
 } from "../../api/songs"
+import { getChords, ChordDTO } from "../../api/chords"
 import SongCard from "../../components/SongCard"
 import { useDebounce } from "../../hooks/useDebounce"
 import { useAuthContext } from "../../context/AuthProvider"
-import { getChords, ChordDTO } from "../../api/chords"
 
 const GENRES = ["rock", "pop", "jazz", "classic", "other"]
 
@@ -23,7 +23,6 @@ export default function SongsPage() {
   const [chordId, setChordId] = useState<number | undefined>(undefined)
   const [sortAsc, setSortAsc] = useState(true)
   const [loaded, setLoaded] = useState(false)
-
   const debounced = useDebounce(search, 400)
 
   const isAdmin = (() => {
@@ -54,78 +53,70 @@ export default function SongsPage() {
     }
   }
 
-  useEffect(() => {
-    if (loaded) fetchSongs()
-  }, [debounced, genre, chordId, sortAsc])
-
-  /* ---------- load chords for filter ---------- */
+  /* ---- chords for filter ---- */
   const [chords, setChords] = useState<ChordDTO[]>([])
   useEffect(() => {
     getChords("").then(setChords).catch(() => {})
   }, [])
 
-  /* ---------- admin create modal ---------- */
-  const [showModal, setShowModal] = useState(false)
+  /* ---- saved ids ---- */
+  const [saved, setSaved] = useState<number[]>([])
+  useEffect(() => {
+    if (!token) return
+    import("../../api/songs")
+      .then((m) => m.getSaved())
+      .then((list) => setSaved(list.map((s) => s.id)))
+      .catch(() => {})
+  }, [token])
+
+  /* ---- admin modal ---- */
+  const [show, setShow] = useState(false)
   const [title, setTitle] = useState("")
   const [lyrics, setLyrics] = useState("")
   const [newGenre, setNewGenre] = useState("")
-  const [selectedChordIds, setSelectedChordIds] = useState<number[]>([])
+  const [selChordIds, setSelChordIds] = useState<number[]>([])
   const [sheetFile, setSheetFile] = useState<File | null>(null)
   const [audioFile, setAudioFile] = useState<File | null>(null)
 
   async function handleCreate() {
-    if (!title || selectedChordIds.length === 0) {
-      alert("Заповніть назву і виберіть акорди")
+    if (!title || selChordIds.length === 0) {
+      alert("Назва + акорди обов’язкові")
       return
     }
     const fd = new FormData()
     fd.append("title", title)
     fd.append("lyrics", lyrics)
     fd.append("genre", newGenre || "other")
-    fd.append("chord_ids", JSON.stringify(selectedChordIds))
+    fd.append("chord_ids", JSON.stringify(selChordIds))
     if (sheetFile) fd.append("sheet", sheetFile)
     if (audioFile) fd.append("audio", audioFile)
     try {
       await createSong(fd)
-      setShowModal(false)
-      setTitle("")
-      setLyrics("")
-      setNewGenre("")
-      setSelectedChordIds([])
+      setShow(false)
       fetchSongs()
     } catch {
       alert("Помилка створення")
     }
   }
 
-  async function handleDelete(id: number) {
-    if (!window.confirm("Видалити пісню?")) return
+  /* ---- helpers ---- */
+  async function toggleSave(id: number) {
     try {
-      await deleteSong(id)
-      fetchSongs()
-    } catch {
-      alert("Помилка видалення")
-    }
-  }
-
-  async function handleSave(id: number, saved: boolean) {
-    try {
-      saved ? await unsaveSong(id) : await saveSong(id)
+      if (saved.includes(id)) {
+        await unsaveSong(id)
+      } else {
+        await saveSong(id)
+      }
       fetchSongs()
     } catch {
       alert("Помилка")
     }
   }
 
-  /* ---------- track saved -------------------- */
-  const [savedIds, setSavedIds] = useState<number[]>([])
-  useEffect(() => {
-    if (!token) return
-    import("../../api/songs")
-      .then((m) => m.getSaved())
-      .then((list) => setSavedIds(list.map((s) => s.id)))
-      .catch(() => {})
-  }, [token])
+  async function handleDelete(id: number) {
+    if (!window.confirm("Видалити пісню?")) return
+    await deleteSong(id).then(fetchSongs).catch(() => alert("Помилка"))
+  }
 
   return (
     <div className="p-4">
@@ -133,31 +124,27 @@ export default function SongsPage() {
 
       <div className="flex flex-wrap gap-2 mb-4">
         <input
-          className="border p-2 rounded flex-1 min-w-[150px]"
-          placeholder="Пошук..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          placeholder="Пошук..."
+          className="border p-2 rounded flex-1 min-w-[150px]"
         />
-
         <select
-          className="border p-2 rounded"
           value={genre}
           onChange={(e) => setGenre(e.target.value)}
+          className="border p-2 rounded"
         >
           <option value="">Усі жанри</option>
           {GENRES.map((g) => (
-            <option key={g} value={g}>
-              {g.toUpperCase()}
-            </option>
+            <option key={g}>{g.toUpperCase()}</option>
           ))}
         </select>
-
         <select
-          className="border p-2 rounded"
           value={chordId ?? ""}
           onChange={(e) =>
             setChordId(e.target.value ? Number(e.target.value) : undefined)
           }
+          className="border p-2 rounded"
         >
           <option value="">Будь‑який акорд</option>
           {chords.map((c) => (
@@ -166,32 +153,23 @@ export default function SongsPage() {
             </option>
           ))}
         </select>
-
-        <button
-          className="px-3 py-2 bg-light/10 rounded"
-          onClick={() => setSortAsc((p) => !p)}
-        >
+        <button onClick={() => setSortAsc((p) => !p)} className="px-3 py-2 bg-light/10 rounded">
           {sortAsc ? "A→Z" : "Z→A"}
         </button>
-
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={fetchSongs}
-        >
+        <button onClick={fetchSongs} className="px-4 py-2 bg-blue-600 text-white rounded">
           Показати
         </button>
-
         {isAdmin && (
           <button
             className="px-4 py-2 bg-green-600 text-white rounded"
-            onClick={() => setShowModal(true)}
+            onClick={() => setShow(true)}
           >
             + Додати
           </button>
         )}
       </div>
 
-      {!loaded && <p>Натисніть “Показати” для завантаження...</p>}
+      {!loaded && <p>Натисніть “Показати”...</p>}
       {loaded && songs.length === 0 && <p>Нічого не знайдено</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -200,17 +178,15 @@ export default function SongsPage() {
             <SongCard {...s} />
             <div className="absolute top-2 right-2 flex gap-2">
               <button
-                onClick={() => handleSave(s.id, savedIds.includes(s.id))}
-                className="bg-accent text-white rounded px-2"
-                title="У вибране"
+                className="bg-accent text-white px-2 rounded"
+                onClick={() => toggleSave(s.id)}
               >
-                {savedIds.includes(s.id) ? "−" : "+"}
+                {saved.includes(s.id) ? "−" : "+"}
               </button>
               {isAdmin && (
                 <button
+                  className="bg-red-600 text-white px-2 rounded"
                   onClick={() => handleDelete(s.id)}
-                  className="bg-red-600 text-white rounded px-2"
-                  title="Видалити"
                 >
                   🗑
                 </button>
@@ -220,49 +196,42 @@ export default function SongsPage() {
         ))}
       </div>
 
-      {/* ---------- modal create ---------- */}
-      {showModal && (
+      {show && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-dark p-6 rounded w-96 space-y-3 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-2">Нова пісня</h3>
-
+          <div className="bg-dark p-6 rounded w-96 max-h-[90vh] overflow-y-auto space-y-3">
+            <h3 className="text-xl font-bold">Нова пісня</h3>
             <input
-              className="w-full p-2 border rounded"
               placeholder="Назва"
+              className="w-full p-2 border rounded"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-
             <textarea
+              placeholder="Текст"
               className="w-full p-2 border rounded"
-              placeholder="Текст пісні"
               rows={4}
               value={lyrics}
               onChange={(e) => setLyrics(e.target.value)}
             />
-
             <select
-              className="w-full p-2 border rounded"
               value={newGenre}
               onChange={(e) => setNewGenre(e.target.value)}
+              className="w-full p-2 border rounded"
             >
               <option value="">Оберіть жанр</option>
               {GENRES.map((g) => (
-                <option key={g} value={g}>
-                  {g.toUpperCase()}
-                </option>
+                <option key={g}>{g.toUpperCase()}</option>
               ))}
             </select>
-
-            <label className="block">Виберіть акорди:</label>
+            <label>Акорди:</label>
             <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border p-2 rounded">
               {chords.map((c) => (
                 <label key={c.id} className="flex items-center gap-1">
                   <input
                     type="checkbox"
-                    checked={selectedChordIds.includes(c.id)}
+                    checked={selChordIds.includes(c.id)}
                     onChange={(e) =>
-                      setSelectedChordIds((prev) =>
+                      setSelChordIds((prev) =>
                         e.target.checked
                           ? [...prev, c.id]
                           : prev.filter((x) => x !== c.id)
@@ -273,32 +242,23 @@ export default function SongsPage() {
                 </label>
               ))}
             </div>
-
-            <label>Файл табулатури (png, jpg, pdf):</label>
+            <label>Sheet (png/jpg/pdf):</label>
             <input
               type="file"
               accept=".png,.jpg,.jpeg,.pdf"
               onChange={(e) => setSheetFile(e.target.files?.[0] || null)}
             />
-
-            <label>Файл аудіо (mp3, wav, ogg):</label>
+            <label>Audio (mp3/wav/ogg):</label>
             <input
               type="file"
               accept=".mp3,.wav,.ogg"
               onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
             />
-
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-3 py-1 bg-light/20 rounded"
-              >
+              <button className="px-3 py-1 bg-light/20 rounded" onClick={() => setShow(false)}>
                 Скасувати
               </button>
-              <button
-                onClick={handleCreate}
-                className="px-4 py-1 bg-blue-600 text-white rounded"
-              >
+              <button className="px-4 py-1 bg-blue-600 text-white rounded" onClick={handleCreate}>
                 Створити
               </button>
             </div>
@@ -308,4 +268,3 @@ export default function SongsPage() {
     </div>
   )
 }
-
