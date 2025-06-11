@@ -1,7 +1,8 @@
 from .base import Base
 from .user import User, UserRole
 from .chord import Chord
-from .song import Song, SongChord
+from .song import Song, SongChord, Genre
+from .user_song import UserSong
 
 __all__ = [
     "Base",
@@ -10,5 +11,6 @@ __all__ = [
     "Chord",
     "Song",
     "SongChord",
+    "Genre",
+    "UserSong",
 ]
-
