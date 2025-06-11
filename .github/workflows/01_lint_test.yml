@@ -36,5 +36,45 @@ jobs:
       - name: Install frontend dependencies
         run: npm install --legacy-peer-deps --prefix frontend
 
+      - name: Build frontend
+        run: npm run build --prefix frontend
+name: lint-test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest
+
+      - name: Run backend unit tests
+        run: pytest backend/tests -q --cov=backend/app --cov-report=xml
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        run: npm install --legacy-peer-deps --prefix frontend
+
       #
       
