@@ -51,4 +51,3 @@ export async function getSaved() {
   const { data } = await api.get<SongDTO[]>("/songs/me/saved")
   return data
 }
-
