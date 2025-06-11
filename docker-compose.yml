@@ -8,25 +8,25 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
     ports:
-      - "5433:5432"
+       "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+     pgdata:/var/lib/postgresql/data
 
   backend:
     build: ./backend
     env_file: .env.example
     depends_on:
-      - db
-    -  ports:
--    - "8000:80"
-+  ports:
-+    - "8080:80"
+     db
+     ports:
+"8000:80"
+ ports:
+   "8080:80"
 
 frontend:
   build:
     context: ./frontend
     args:
--      VITE_API_URL: http://localhost:8000
-+      VITE_API_URL: http://localhost:8080
+     VITE_API_URL: http://localhost:8000
+    VITE_API_URL: http://localhost:8080
 volumes:
   pgdata:
