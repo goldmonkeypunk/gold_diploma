@@ -1,1 +1,27 @@
+Мname: staging-cd
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
+            docker pull ghcr.io/${{ github.repository }}/backend:${IMAGE_TAG}
+            docker pull ghcr.io/${{ github.repository }}/frontend:${IMAGE_TAG}
+            docker compose -f docker-compose.yml up -d
 
