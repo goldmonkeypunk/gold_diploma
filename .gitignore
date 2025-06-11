@@ -1,7 +1,6 @@
 # Python
 __pycache__/
 *.py[cod]
-*.sqlite
 env/
 venv/
 
@@ -16,7 +15,6 @@ build/
 .idea/
 .DS_Store
 
-# Media
+# Media (generated)
 static/chords/
 static/songs/
-
