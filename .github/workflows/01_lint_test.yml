@@ -6,11 +6,10 @@ import axios from "axios";
 import { ChordDTO } from "../../api/chords";
 
 const ChordDetailsPage: React.FC = () => {
-  // ⬇️ корректный generic
-  const { id } = useParams<'id'>();
+  const { id } = useParams<{ id: string }>();
 
-  const [chord, setChord]   = useState<ChordDTO | null>(null);
-  const [error, setError]   = useState<string | null>(null);
+  const [chord,   setChord] = useState<ChordDTO | null>(null);
+  const [error,   setError] = useState<string | null>(null);
   const [loading, setLoad ] = useState(true);
 
   useEffect(() => {
@@ -36,7 +35,9 @@ const ChordDetailsPage: React.FC = () => {
   return (
     <section className="p-4">
       <h1 className="text-2xl font-bold mb-4">{chord.name}</h1>
-      <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(chord, null, 2)}</pre>
+      <pre className="bg-gray-100 p-2 rounded">
+        {JSON.stringify(chord, null, 2)}
+      </pre>
     </section>
   );
 };
