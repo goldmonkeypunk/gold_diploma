@@ -33,3 +33,6 @@ class User(Base):
     saved_songs: Mapped[List["UserSong"]] = relationship(
         "UserSong", back_populates="user"
     )
+    saved_chords: Mapped[List["UserChord"]] = relationship(
+        "UserChord", back_populates="user"
+    )
