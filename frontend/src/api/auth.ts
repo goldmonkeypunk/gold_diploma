@@ -1,4 +1,3 @@
-
 import axios from "axios"
 
 const api = axios.create({
@@ -11,18 +10,12 @@ export interface TokenResponse {
 }
 
 export async function login(username: string, password: string) {
-  const { data } = await api.post<TokenResponse>("/login", {
-    username,
-    password,
-  })
+  const { data } = await api.post<TokenResponse>("/login", { username, password })
   return data
 }
 
 export async function register(username: string, password: string) {
-  const { data } = await api.post("/register", {
-    username,
-    password,
-  })
+  const { data } = await api.post("/register", { username, password })
   return data
 }
 
