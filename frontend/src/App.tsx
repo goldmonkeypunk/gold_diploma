@@ -7,8 +7,8 @@ import ChordsPage from "./pages/Chords/ChordsPage";
 import ChordDetailsPage from "./pages/Chords/ChordDetailsPage";
 import SongsPage from "./pages/Songs/SongsPage";
 import ProfilePage from "./pages/ProfilePage";
-import LoginPage from "./pages/Auth/LoginPage";
-import RegisterPage from "./pages/Auth/RegisterPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -31,7 +31,6 @@ const App: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* fallback 404 */}
           <Route
             path="*"
             element={
