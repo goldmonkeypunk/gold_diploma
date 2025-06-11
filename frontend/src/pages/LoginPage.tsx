@@ -12,8 +12,8 @@ export default function LoginPage() {
     e.preventDefault()
     try {
       await login(username, password)
-      navigate("/") // главное меню
-    } catch (err) {
+      navigate("/")
+    } catch {
       alert("Помилка входу")
     }
   }
@@ -45,4 +45,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
