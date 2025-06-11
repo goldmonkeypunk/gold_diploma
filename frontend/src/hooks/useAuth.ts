@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react"
-import { login as apiLogin, register as apiRegister, setAuthHeader } from "../api/auth"
+import {
+  login as apiLogin,
+  register as apiRegister,
+  setAuthHeader,
+  TokenResponse,
+} from "../api/auth"
 
 export function useAuth() {
   const [token, setToken] = useState<string | null>(null)
@@ -13,7 +18,7 @@ export function useAuth() {
   }, [])
 
   async function login(username: string, password: string) {
-    const data = await apiLogin(username, password)
+    const data: TokenResponse = await apiLogin(username, password)
     localStorage.setItem("access_token", data.access_token)
     setAuthHeader(data.access_token)
     setToken(data.access_token)
