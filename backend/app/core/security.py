@@ -6,15 +6,15 @@ SECRET_KEY = "REPLACE_ME_SECRET_32_CHARS"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def hash_password(pwd: str) -> str:
-    return pwd_ctx.hash(pwd)
+def hash_password(p: str) -> str:
+    return _pwd.hash(p)
 
 
-def verify_password(pwd: str, hashed: str) -> bool:
-    return pwd_ctx.verify(pwd, hashed)
+def verify_password(p: str, hashed: str) -> bool:
+    return _pwd.verify(p, hashed)
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -29,4 +29,3 @@ def decode_token(token: str) -> dict:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return {}
-
