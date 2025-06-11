@@ -4,10 +4,13 @@ from pydantic import BaseModel, constr
 from datetime import timedelta
 import re
 
-from database import get_db
-from app.models import Chord, User, UserRole
--from auth import (hash_password, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES)
-router = APIRouter(prefix="", tags=["auth"])
+from app.core.database import get_db
+from app.core.security import (
+     hash_password,
+     verify_password,
+     create_access_token,
+     ACCESS_TOKEN_EXPIRE_MINUTES,
+ )
 
 
 class RegisterIn(BaseModel):
