@@ -1,45 +1,38 @@
-// frontend/src/pages/Chords/ChordDetailsPage.tsx
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+name: lint-test
 
-import { ChordDTO } from "../../api/chords";
+on:
+  push:
+  pull_request:
 
-const ChordDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  const [chord,   setChord] = useState<ChordDTO | null>(null);
-  const [error,   setError] = useState<string | null>(null);
-  const [loading, setLoad ] = useState(true);
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-  useEffect(() => {
-    if (!id) return;
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
 
-    (async () => {
-      try {
-        const { data } = await axios.get<ChordDTO>(`/api/chords/${id}`);
-        setChord(data);
-      } catch (e) {
-        setError("Не удалось загрузить аккорд");
-        console.error(e);
-      } finally {
-        setLoad(false);
-      }
-    })();
-  }, [id]);
+      - name: Run backend unit tests
+        run: pytest backend/tests -q --cov=backend/app --cov-report=xml
 
-  if (loading) return <p>Загрузка…</p>;
-  if (error)   return <p className="text-red-600">{error}</p>;
-  if (!chord)  return null;
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  return (
-    <section className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{chord.name}</h1>
-      <pre className="bg-gray-100 p-2 rounded">
-        {JSON.stringify(chord, null, 2)}
-      </pre>
-    </section>
-  );
-};
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
 
-export default ChordDetailsPage;
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Build frontend
+        run: npm run build --prefix frontend
