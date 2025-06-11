@@ -7,9 +7,15 @@ const NavBar: React.FC = () => {
 
   return (
     <nav className="flex gap-4 p-4 bg-gray-200">
-      <Link to="/chords">{t("chords")}</Link>
-      <Link to="/songs">{t("songs")}</Link>
-      <Link to="/profile">{t("profile")}</Link>
+      <Link to="/chords"   className="hover:underline">
+        {t("chords")}
+      </Link>
+      <Link to="/songs"    className="hover:underline">
+        {t("songs")}
+      </Link>
+      <Link to="/profile"  className="hover:underline">
+        {t("profile")}
+      </Link>
     </nav>
   );
 };
