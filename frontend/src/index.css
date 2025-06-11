@@ -1,3 +1,15 @@
+/* Tailwind CSS layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Кастомні глобальні стилі (за потреби додавай нижче) */
+html,
+body {
+  min-height: 100%;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
