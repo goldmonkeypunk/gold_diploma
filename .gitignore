@@ -1,1 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite
+env/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Env & IDE
+.env
+.vscode/
+.idea/
+.DS_Store
+
+# Media
+static/chords/
+static/songs/
 
