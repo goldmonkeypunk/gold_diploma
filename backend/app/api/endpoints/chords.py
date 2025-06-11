@@ -14,13 +14,14 @@ from fastapi import (
     Path as FPath,
 )
 from sqlalchemy.orm import Session
-
+from app.api.endpoints.chord_save import router as save_router
 from app.core.database import get_db
 from app.models.chord import Chord
 from app.models.user import User, UserRole
 from app.api.endpoints.auth import get_current_user
 
 router = APIRouter(prefix="/chords", tags=["chords"])
+router.include_router(save_router)
 
 STATIC_DIR = Path(__file__).resolve().parents[3] / "static" / "chords"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
