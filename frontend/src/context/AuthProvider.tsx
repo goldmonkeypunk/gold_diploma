@@ -1,25 +1,55 @@
-import React, { createContext, useContext } from "react"
-import { useAuth } from "../hooks/useAuth"
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { login as apiLogin, setAuthHeader, AuthResponse } from "../api/auth";
 
-interface AuthCtx {
-  token: string | null
-  login: (u: string, p: string) => Promise<void>
-  register: (u: string, p: string) => Promise<void>
-  logout: () => void
+interface AuthContextValue {
+  token: string | null;
+  isAuth: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
-const Ctx = createContext<AuthCtx>({
-  token: null,
-  login: async () => {},
-  register: async () => {},
-  logout: () => {},
-})
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const auth = useAuth()
-  return <Ctx.Provider value={auth}>{children}</Ctx.Provider>
-}
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [token, setToken] = useState<string | null>(null);
 
+  /* завантажуємо токен з localStorage один раз */
+  useEffect(() => {
+    const stored = localStorage.getItem("access_token");
+    if (stored) {
+      setToken(stored);
+      setAuthHeader(stored);
+    }
+  }, []);
+
+  const login = async (username: string, password: string) => {
+    const res: AuthResponse = await apiLogin({ username, password });
+    localStorage.setItem("access_token", res.access_token);
+    setAuthHeader(res.access_token);
+    setToken(res.access_token);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("access_token");
+    setAuthHeader(null);
+    setToken(null);
+  };
+
+  const value: AuthContextValue = {
+    token,
+    isAuth: token !== null,
+    login,
+    logout
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+/* зручний хук */
 export function useAuthContext() {
-  return useContext(Ctx)
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error("useAuthContext must be used within AuthProvider");
+  }
+  return ctx;
 }
