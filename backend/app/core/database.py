@@ -1,9 +1,9 @@
-import datetime
 from typing import Optional
-
 from pydantic import BaseSettings, Field, validator
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+
+from app.models import Base
 
 try:
     import alembic.config
@@ -11,24 +11,22 @@ try:
 except ImportError:
     alembic = None
 
-from app.models import Base
-
 
 class DBSettings(BaseSettings):
-    db_dialect: str = Field(default="sqlite", env="DB_DIALECT")
-    db_host: Optional[str] = Field(default=None, env="DB_HOST")
-    db_port: Optional[int] = Field(default=None, env="DB_PORT")
-    db_user: Optional[str] = Field(default=None, env="DB_USER")
-    db_pass: Optional[str] = Field(default=None, env="DB_PASS")
-    db_name: str = Field(default="app.db", env="DB_NAME")
-    use_alembic: bool = Field(default=False, env="USE_ALEMBIC")
+    db_dialect: str = Field("sqlite", env="DB_DIALECT")
+    db_host: Optional[str] = Field(None, env="DB_HOST")
+    db_port: Optional[int] = Field(None, env="DB_PORT")
+    db_user: Optional[str] = Field(None, env="DB_USER")
+    db_pass: Optional[str] = Field(None, env="DB_PASS")
+    db_name: str = Field("app.db", env="DB_NAME")
+    use_alembic: bool = Field(False, env="USE_ALEMBIC")
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
 
     @validator("db_dialect")
-    def validate_dialect(cls, v):
+    def _dialect(cls, v):
         if v not in ("sqlite", "postgresql", "mysql"):
             raise ValueError("Unsupported DB_DIALECT")
         return v
@@ -43,37 +41,30 @@ if settings.db_dialect == "sqlite":
     )
 else:
     if not (settings.db_host and settings.db_port and settings.db_user and settings.db_pass):
-        raise ValueError("Missing database connection variables")
-
+        raise ValueError("Missing DB connection variables")
     if settings.db_dialect == "postgresql":
         DATABASE_URL = (
             f"postgresql://{settings.db_user}:{settings.db_pass}"
             f"@{settings.db_host}:{settings.db_port}/{settings.db_name}"
         )
-    elif settings.db_dialect == "mysql":
+    else:
         DATABASE_URL = (
             f"mysql+pymysql://{settings.db_user}:{settings.db_pass}"
             f"@{settings.db_host}:{settings.db_port}/{settings.db_name}"
         )
-    else:
-        raise NotImplementedError("Unsupported dialect")
-
     engine = create_engine(DATABASE_URL, echo=False)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
-def init_db() -> None:
+def init_db():
     if settings.use_alembic and alembic:
-        apply_alembic()
+        _apply_alembic()
     else:
         Base.metadata.create_all(bind=engine)
 
 
-def apply_alembic() -> None:
-    if not alembic:
-        Base.metadata.create_all(bind=engine)
-        return
+def _apply_alembic():
     try:
         cfg = alembic.config.Config("alembic.ini")
         alembic.command.upgrade(cfg, "head")
@@ -96,8 +87,5 @@ def recreate_all():
 
 def test_connection():
     with engine.connect() as conn:
-        result = conn.execute(text("SELECT 1"))
-        row = result.fetchone()
-        if not row or row[0] != 1:
-            raise RuntimeError("DB connection test failed")
-
+        row = conn.execute(text("SELECT 1")).fetchone()
+        assert row and row[0] == 1
