@@ -13,4 +13,3 @@ export default function SongCard({ id, title, genre }: SongDTO) {
     </Link>
   )
 }
-
