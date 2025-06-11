@@ -18,16 +18,21 @@ jobs:
           scan-type: fs
           ignore-unfixed: true
           severity: CRITICAL,HIGH
-        continue-on-error: true       
+        continue-on-error: true   # отчёт, но пайплайн не валится
 
   dependabot-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v3
         with:
           node-version: "20"
-      - run: npm install --package-lock-only --legacy-peer-deps
+
+      - name: Generate lockfile
+        run: npm install --package-lock-only --legacy-peer-deps
+        working-directory: frontend
+
       - name: npm audit
         run: npm audit --production --audit-level=high || true
-
+        working-directory: frontend
