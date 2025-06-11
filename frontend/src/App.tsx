@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./context/AuthProvider"
 import NavBar from "./components/NavBar"
 
+import HomePage from "./pages/HomePage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import ChordsPage from "./pages/Chords/ChordsPage"
@@ -11,7 +12,6 @@ import ChordDetailsPage from "./pages/Chords/ChordDetailsPage"
 import SongsPage from "./pages/Songs/SongsPage"
 import SongDetailsPage from "./pages/Songs/SongDetailsPage"
 import ProfilePage from "./pages/ProfilePage"
-import HomePage from "./pages/HomePage"            // если ещё нет — создайте файл по аналогии
 
 export default function App() {
   return (
@@ -22,13 +22,10 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-
           <Route path="/chords" element={<ChordsPage />} />
           <Route path="/chords/:chordId" element={<ChordDetailsPage />} />
-
           <Route path="/songs" element={<SongsPage />} />
           <Route path="/songs/:songId" element={<SongDetailsPage />} />
-
           <Route path="/profile" element={<ProfilePage />} />
           <Route
             path="*"
