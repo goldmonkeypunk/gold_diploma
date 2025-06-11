@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 
 from database import get_db
-from models import User, UserRole
+from app.models import Chord, User, UserRole
 from auth import (
     hash_password,
     verify_password,
