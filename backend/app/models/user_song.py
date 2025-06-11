@@ -1,6 +1,5 @@
-import datetime
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import Integer, ForeignKey, UniqueConstraint
 
 from .base import Base
 
@@ -14,9 +13,6 @@ class UserSong(Base):
     )
     song_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("songs.id", ondelete="CASCADE"), index=True
-    )
-    saved_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, default=datetime.datetime.utcnow
     )
 
     user = relationship("User", back_populates="saved_songs")
