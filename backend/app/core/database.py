@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseSettings, Field, validator
+from pydantic_settings import BaseSettings
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
