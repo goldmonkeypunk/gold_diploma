@@ -36,13 +36,5 @@ jobs:
       - name: Install frontend dependencies
         run: npm install --legacy-peer-deps --prefix frontend
 
-      # ───── debug-шаг: ищем любые упоминания "npm ci" ─────
-      - name: Debug npm ci search
-        run: |
-          echo "----- PWD -----"
-          pwd
-          echo "----- SEARCH RESULTS -----"
-          grep -R --line-number --color=never 'npm ci' . || echo "No npm ci found"
-
-      - name: Build frontend
-        run: npm run build --prefix frontend
+      #
+      
