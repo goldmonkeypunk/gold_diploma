@@ -35,3 +35,11 @@ export async function saveChord(id: number) {
   return api.post(`/chords/${id}/save`)
 }
 
+export async function unsaveChord(id: number) {
+  return api.delete(`/chords/${id}/save`)
+}
+
+export async function getSavedChords() {
+  const { data } = await api.get<ChordDTO[]>("/chords/me/saved")
+  return data
+}
