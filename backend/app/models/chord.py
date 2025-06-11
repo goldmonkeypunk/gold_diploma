@@ -1,8 +1,8 @@
-from typing import Optional, List
 import json
+from typing import Optional, List
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import Integer, String, Text, ForeignKey
 
 from .base import Base
 
@@ -21,8 +21,6 @@ class Chord(Base):
     created_by_user = relationship("User", back_populates="chords_created")
     songs = relationship("SongChord", back_populates="chord")
 
-    # допоміжна властивість для зручності
     @property
     def strings(self) -> List[int]:
         return json.loads(self.strings_json or "[]")
-
