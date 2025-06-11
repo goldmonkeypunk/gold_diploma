@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # ───────────────── backend ─────────────────
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install flake8 mypy
+
+      - name: Lint (flake8)
+        run: flake8 backend
+
+      - name: Type-check (mypy)
+        run: mypy backend
+
+      - name: Tests + coverage
+        run: pytest backend/tests -q --cov=backend/app --cov-report=xml
+
+  # ───────────────── frontend ────────────────
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        run: npm install --legacy-peer-deps --prefix frontend
+
+      # при наличии eslint можно раскомментировать
+      # - name: Lint (eslint)
+      #   run: npx eslint "frontend/src/**/*.{js,ts,jsx,tsx}"
+
+      - name: Build frontend
+        run: npm run build --prefix frontend
