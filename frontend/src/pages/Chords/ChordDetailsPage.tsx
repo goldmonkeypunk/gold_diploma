@@ -1,53 +1,45 @@
-import React, { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-import axios from "axios"
-import { ChordDTO } from "../../api/chords"
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import { useTranslation } from "react-i18next";
 
-export default function ChordDetailsPage() {
-  const { chordId } = useParams()
-  const [chord, setChord] = useState<ChordDTO | null>(null)
+import { ChordDTO } from "../../api/chords";
+
+const ChordDetailsPage: React.FC = () => {
+  const { t } = useTranslation();
+  const { id } = useParams<{ id: string }>();
+
+  const [chord, setChord] = useState<ChordDTO | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const { data } = await axios.get<ChordDTO>(
-          `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/chords/${chordId}`
-        )
-        setChord(data)
-      } catch {
-        alert("Помилка завантаження")
-      }
-    }
-    if (chordId) load()
-  }, [chordId])
+    if (!id) return;
 
-  if (!chord) return <p className="p-4">Завантаження...</p>
+    (async () => {
+      try {
+        const { data } = await axios.get<ChordDTO>(`/api/chords/${id}`);
+        setChord(data);
+      } catch {
+        setError(t("error_load_chord"));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id, t]);
+
+  if (loading) return <p>{t("loading")}</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
+  if (!chord) return null;
 
   return (
-    <div className="p-4">
-      <h2 className="text-3xl font-bold mb-4">{chord.name}</h2>
+    <section className="p-4">
+      <h1 className="text-2xl font-bold mb-4">{chord.name}</h1>
+      <pre className="bg-gray-100 p-2 rounded">
+        {JSON.stringify(chord, null, 2)}
+      </pre>
+    </section>
+  );
+};
 
-      {chord.image_url && (
-        <img
-          src={chord.image_url}
-          alt={chord.name}
-          className="w-64 h-64 object-contain rounded mb-4"
-        />
-      )}
-
-      {chord.audio_url && (
-        <audio controls src={chord.audio_url} className="mb-4" />
-      )}
-
-      <p className="font-semibold">Струни:</p>
-      <p>{chord.strings.join(" - ")}</p>
-
-      {chord.description && (
-        <>
-          <p className="mt-4 font-semibold">Опис:</p>
-          <p>{chord.description}</p>
-        </>
-      )}
-    </div>
-  )
-}
+export default ChordDetailsPage;
