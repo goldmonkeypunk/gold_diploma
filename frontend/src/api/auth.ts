@@ -1,24 +1,38 @@
-import axios from "axios"
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
-})
+  baseURL: import.meta.env.VITE_API_URL ?? "/api",
+  withCredentials: false,
+  headers: { "Content-Type": "application/json" }
+});
 
-export interface TokenResponse {
-  access_token: string
-  token_type: string
+export interface LoginPayload {
+  username: string;
+  password: string;
 }
 
-export async function login(username: string, password: string) {
-  const { data } = await api.post<TokenResponse>("/login", { username, password })
-  return data
+export interface AuthResponse {
+  access_token: string;
+  token_type: "bearer";
+  expires_in: number; // секунд
 }
 
-export async function register(username: string, password: string) {
-  const { data } = await api.post("/register", { username, password })
-  return data
+export async function login(data: LoginPayload) {
+  const res = await api.post<AuthResponse>("/auth/login", data);
+  return res.data;
 }
 
-export function setAuthHeader(token: string) {
-  api.defaults.headers.common["Authorization"] = `Bearer ${token}`
+export async function register(data: LoginPayload) {
+  const res = await api.post<AuthResponse>("/auth/register", data);
+  return res.data;
 }
+
+export function setAuthHeader(token: string | null) {
+  if (token) {
+    api.defaults.headers.common.Authorization = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common.Authorization;
+  }
+}
+
+export default api;
