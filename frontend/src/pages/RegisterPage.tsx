@@ -1,88 +1,69 @@
-import React, { useEffect, useState } from "react"
-import { getSaved, unsaveSong, SongDTO } from "../api/songs"
-import { getSavedChords, unsaveChord, ChordDTO } from "../api/chords"
-import { useAuthContext } from "../context/AuthProvider"
-import { Link } from "react-router-dom"
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../hooks/useAuth";
 
-export default function ProfilePage() {
-  const { token, logout } = useAuthContext()
-  const [songs, setSongs] = useState<SongDTO[]>([])
-  const [chords, setChords] = useState<ChordDTO[]>([])
+const RegisterPage: React.FC = () => {
+  const { t } = useTranslation();
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-  async function load() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
-      const [s, c] = await Promise.all([getSaved(), getSavedChords()])
-      setSongs(s)
-      setChords(c)
+      await register(username, password);
+      navigate("/profile");
     } catch {
-      alert("Помилка завантаження")
+      setError("Registration failed");
+    } finally {
+      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    if (token) load()
-  }, [token])
-
-  async function removeSong(id: number) {
-    await unsaveSong(id).catch(() => alert("Помилка"))
-    load()
-  }
-  async function removeChord(id: number) {
-    await unsaveChord(id).catch(() => alert("Помилка"))
-    load()
-  }
-
-  if (!token)
-    return <p className="p-4">Спершу увійдіть, щоб побачити профіль.</p>
+  };
 
   return (
-    <div className="p-4 space-y-6">
-      <button
-        onClick={logout}
-        className="bg-red-600 text-white px-3 py-1 rounded mb-2"
+    <section className="flex flex-col items-center gap-4">
+      <h1 className="text-2xl font-bold">{t("register")}</h1>
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-3 w-64 text-sm"
       >
-        Вийти
-      </button>
+        <input
+          className="border rounded p-2"
+          type="text"
+          placeholder={t("username")}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
 
-      <section>
-        <h3 className="text-xl font-bold mb-2">Збережені пісні</h3>
-        {songs.length === 0 && <p>Поки що пусто</p>}
-        <ul className="space-y-2">
-          {songs.map((s) => (
-            <li key={s.id} className="flex items-center gap-2 bg-light/5 p-2 rounded">
-              <Link to={`/songs/${s.id}`} className="flex-1 hover:underline">
-                {s.title}
-              </Link>
-              <button
-                onClick={() => removeSong(s.id)}
-                className="bg-red-600 text-white px-2 rounded"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
+        <input
+          className="border rounded p-2"
+          type="password"
+          placeholder={t("password")}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      <section>
-        <h3 className="text-xl font-bold mb-2">Збережені акорди</h3>
-        {chords.length === 0 && <p>Поки що пусто</p>}
-        <ul className="space-y-2">
-          {chords.map((c) => (
-            <li key={c.id} className="flex items-center gap-2 bg-light/5 p-2 rounded">
-              <Link to={`/chords/${c.id}`} className="flex-1 hover:underline">
-                {c.name}
-              </Link>
-              <button
-                onClick={() => removeChord(c.id)}
-                className="bg-red-600 text-white px-2 rounded"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
-  )
-}
+        {error && <p className="text-red-600">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
+        >
+          {loading ? t("loading") : t("register")}
+        </button>
+      </form>
+    </section>
+  );
+};
+
+export default RegisterPage;
