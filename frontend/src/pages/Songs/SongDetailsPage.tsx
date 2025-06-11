@@ -19,39 +19,27 @@ export default function SongDetailsPage() {
     <div className="p-4 space-y-4">
       <h2 className="text-3xl font-bold">{song.title}</h2>
       <p className="uppercase">{song.genre}</p>
-
       {song.sheet_url && (
-        <img
-          src={song.sheet_url}
-          alt="Sheet"
-          className="w-full max-w-xl rounded"
-        />
+        <img src={song.sheet_url} alt="Sheet" className="max-w-xl w-full rounded" />
       )}
-
       {song.audio_url && <audio controls src={song.audio_url} />}
-
       {song.lyrics && (
-        <div className="whitespace-pre-wrap bg-light/5 p-4 rounded">
-          {song.lyrics}
-        </div>
+        <pre className="bg-light/5 p-4 rounded whitespace-pre-wrap">{song.lyrics}</pre>
       )}
-
-      <div>
-        <p className="font-semibold">Акорди:</p>
-        <ul className="list-disc ml-4">
-          {song.chords?.map((c) => (
-            <li key={c.id}>
-              <Link
-                to={`/chords/${c.id}`}
-                className="text-accent hover:underline"
-              >
-                {c.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {song.chords && (
+        <>
+          <p className="font-semibold">Акорди:</p>
+          <ul className="list-disc ml-4">
+            {song.chords.map((c) => (
+              <li key={c.id}>
+                <Link to={`/chords/${c.id}`} className="text-accent hover:underline">
+                  {c.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   )
 }
-
