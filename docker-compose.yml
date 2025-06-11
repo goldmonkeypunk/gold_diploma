@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
     ports:
-      - "5433:5432"          # host:container
+      - "5433:5432"          # host port 5433 -> container 5432
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -18,17 +18,17 @@ services:
     depends_on:
       - db
     ports:
-      - "8000:80"           # host:container
+      - "8000:80"           # host 8000 -> container 80
 
   frontend:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: http://localhost:8000   # передаём в Vite
+        VITE_API_URL: http://localhost:8000   # passed to Vite at build time
     depends_on:
       - backend
     ports:
-      - "3000:80"
+      - "3000:80"           # host 3000 -> container 80
 
 volumes:
   pgdata:
