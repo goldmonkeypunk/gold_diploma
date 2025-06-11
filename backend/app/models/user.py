@@ -2,8 +2,8 @@ import datetime
 from enum import Enum
 from typing import List
 
-from sqlalchemy import Column, Integer, String, DateTime, Enum as SqlEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import Integer, String, DateTime, Enum as SqlEnum
 
 from .base import Base
 
@@ -30,4 +30,6 @@ class User(Base):
     songs_created: Mapped[List["Song"]] = relationship(
         "Song", back_populates="author"
     )
-
+    saved_songs: Mapped[List["UserSong"]] = relationship(
+        "UserSong", back_populates="user"
+    )
