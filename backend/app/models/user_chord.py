@@ -1,21 +1,38 @@
-from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint
+import datetime
+from enum import Enum
+from typing import List
+
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import Integer, String, DateTime, Enum as SqlEnum
 
 from .base import Base
 
 
-class UserChord(Base):
-    __tablename__ = "user_chords"
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(200))
+    role: Mapped[UserRole] = mapped_column(SqlEnum(UserRole), default=UserRole.USER)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, default=datetime.datetime.utcnow
     )
-    chord_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("chords.id", ondelete="CASCADE"), index=True
+
+    chords_created: Mapped[List["Chord"]] = relationship(
+        "Chord", back_populates="created_by_user"
     )
-
-    user = relationship("User", back_populates="saved_chords")
-    chord = relationship("Chord")
-
-    __table_args__ = (UniqueConstraint("user_id", "chord_id", name="uq_user_chord"),)
+    songs_created: Mapped[List["Song"]] = relationship(
+        "Song", back_populates="author"
+    )
+    saved_songs: Mapped[List["UserSong"]] = relationship(
+        "UserSong", back_populates="user"
+    )
+    saved_chords: Mapped[List["UserChord"]] = relationship(
+        "UserChord", back_populates="user"
+    )
