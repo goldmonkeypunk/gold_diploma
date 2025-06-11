@@ -15,10 +15,10 @@ app = FastAPI(title="Гітарні акорди та пісні", version="1.0.
 def _startup():
     init_db()
 
-app.include_router(auth_router)
-app.include_router(chords_router)
-app.include_router(songs_router)
-app.include_router(users_router)
-app.include_router(chord_save_router)   
+ app.include_router(users_router)
+ app.include_router(auth_router)
+ app.include_router(chords_router)
+ app.include_router(songs_router)
+ app.include_router(chord_save_router)   
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
