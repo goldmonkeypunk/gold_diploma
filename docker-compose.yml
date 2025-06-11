@@ -17,18 +17,16 @@ services:
     env_file: .env.example
     depends_on:
       - db
-    ports:
-      - "8080:80"             # host 8080 → container 80
+    -  ports:
+-    - "8000:80"
++  ports:
++    - "8080:80"
 
-  frontend:
-    build:
-      context: ./frontend
-      args:
-        VITE_API_URL: http://localhost:8080   # новий порт!
-    depends_on:
-      - backend
-    ports:
-      - "3000:80"
-
+frontend:
+  build:
+    context: ./frontend
+    args:
+-      VITE_API_URL: http://localhost:8000
++      VITE_API_URL: http://localhost:8080
 volumes:
   pgdata:
