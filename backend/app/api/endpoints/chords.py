@@ -7,21 +7,19 @@ from fastapi import (
     Depends,
     HTTPException,
     status,
-    UploadFile,
-    File,
     Body,
     Query,
     Path as FPath,
+    UploadFile,
+    File,
 )
 from sqlalchemy.orm import Session
-from app.api.endpoints.chord_save import router as save_router
+
 from app.core.database import get_db
-from app.models.chord import Chord
-from app.models.user import User, UserRole
+from app.models import Chord, User, UserRole
 from app.api.endpoints.auth import get_current_user
 
 router = APIRouter(prefix="/chords", tags=["chords"])
-router.include_router(save_router)
 
 STATIC_DIR = Path(__file__).resolve().parents[3] / "static" / "chords"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
@@ -29,22 +27,20 @@ STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("", status_code=201)
 def create_chord(
-    name: str = Body(..., embed=True),
-    strings: List[int] = Body(..., embed=True),
-    description: Optional[str] = Body(None, embed=True),
-    image_url: Optional[str] = Body(None, embed=True),
-    audio_url: Optional[str] = Body(None, embed=True),
+    name: str = Body(...),
+    strings: List[int] = Body(...),
+    description: Optional[str] = Body(None),
+    image_url: Optional[str] = Body(None),
+    audio_url: Optional[str] = Body(None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     if user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Тільки адміністратор може додавати акорди")
-
+        raise HTTPException(403, "Тільки адміністратор може додавати акорди")
     if len(strings) != 6 or not all(-1 <= s <= 24 for s in strings):
-        raise HTTPException(status_code=400, detail="Список strings має містити рівно 6 чисел у діапазоні -1…24")
-
+        raise HTTPException(400, "Список strings має містити 6 чисел -1…24")
     if db.query(Chord).filter(Chord.name == name).first():
-        raise HTTPException(status_code=400, detail="Акорд із такою назвою вже існує")
+        raise HTTPException(400, "Акорд із такою назвою вже існує")
 
     chord = Chord(
         name=name,
@@ -62,13 +58,13 @@ def create_chord(
 
 @router.get("")
 def list_chords(
-    q: Optional[str] = Query(None, alias="search"),
+    search: Optional[str] = Query(None, alias="search"),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    query = db.query(Chord)
-    if q:
-        query = query.filter(Chord.name.ilike(f"%{q}%"))
+    q = db.query(Chord)
+    if search:
+        q = q.filter(Chord.name.ilike(f"%{search}%"))
     return [
         {
             "id": c.id,
@@ -76,7 +72,7 @@ def list_chords(
             "strings": json.loads(c.strings_json or "[]"),
             "image_url": c.image_url,
         }
-        for c in query.all()
+        for c in q.all()
     ]
 
 
@@ -88,7 +84,7 @@ def chord_details(
 ):
     chord = db.query(Chord).filter(Chord.id == chord_id).first()
     if not chord:
-        raise HTTPException(status_code=404, detail="Не знайдено")
+        raise HTTPException(404, "Не знайдено")
     return {
         "id": chord.id,
         "name": chord.name,
@@ -115,7 +111,7 @@ def delete_chord(
     return {"msg": "Видалено"}
 
 
-@router.post("/{chord_id}/upload-image", status_code=200)
+@router.post("/{chord_id}/upload-image")
 def upload_image(
     chord_id: int,
     file: UploadFile = File(...),
@@ -130,17 +126,16 @@ def upload_image(
 
     ext = Path(file.filename).suffix.lower()
     if ext not in {".png", ".jpg", ".jpeg", ".webp"}:
-        raise HTTPException(400, "Дозволені лише зображення")
+        raise HTTPException(400, "Дозволені .png .jpg .jpeg .webp")
 
-    dst_path = STATIC_DIR / f"{chord_id}{ext}"
-    dst_path.write_bytes(file.file.read())
-
-    chord.image_url = f"/static/chords/{chord_id}{ext}"
+    dst = STATIC_DIR / f"{chord_id}{ext}"
+    dst.write_bytes(file.file.read())
+    chord.image_url = f"/static/chords/{dst.name}"
     db.commit()
     return {"image_url": chord.image_url}
 
 
-@router.post("/{chord_id}/upload-audio", status_code=200)
+@router.post("/{chord_id}/upload-audio")
 def upload_audio(
     chord_id: int,
     file: UploadFile = File(...),
@@ -155,12 +150,10 @@ def upload_audio(
 
     ext = Path(file.filename).suffix.lower()
     if ext not in {".mp3", ".wav", ".ogg"}:
-        raise HTTPException(400, "Дозволені лише аудіо")
+        raise HTTPException(400, "Дозволені .mp3 .wav .ogg")
 
-    dst_path = STATIC_DIR / f"{chord_id}{ext}"
-    dst_path.write_bytes(file.file.read())
-
-    chord.audio_url = f"/static/chords/{chord_id}{ext}"
+    dst = STATIC_DIR / f"{chord_id}{ext}"
+    dst.write_bytes(file.file.read())
+    chord.audio_url = f"/static/chords/{dst.name}"
     db.commit()
     return {"audio_url": chord.audio_url}
-
