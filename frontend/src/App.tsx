@@ -1,38 +1,49 @@
-import React from "react"
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import React from "react";
+import { Route, Routes, Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-import { AuthProvider } from "./context/AuthProvider"
-import NavBar from "./components/NavBar"
+import NavBar from "./components/NavBar";
+import ChordsPage from "./pages/Chords/ChordsPage";
+import ChordDetailsPage from "./pages/Chords/ChordDetailsPage";
+import SongsPage from "./pages/Songs/SongsPage";
+import ProfilePage from "./pages/ProfilePage";
+import LoginPage from "./pages/Auth/LoginPage";
+import RegisterPage from "./pages/Auth/RegisterPage";
 
-import HomePage from "./pages/HomePage"
-import LoginPage from "./pages/LoginPage"
-import RegisterPage from "./pages/RegisterPage"
-import ChordsPage from "./pages/Chords/ChordsPage"
-import ChordDetailsPage from "./pages/Chords/ChordDetailsPage"
-import SongsPage from "./pages/Songs/SongsPage"
-import SongDetailsPage from "./pages/Songs/SongDetailsPage"
-import ProfilePage from "./pages/ProfilePage"
+const App: React.FC = () => {
+  const { t } = useTranslation();
 
-export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <NavBar />
+    <div className="min-h-screen flex flex-col">
+      <NavBar />
+
+      <main className="flex-1 container mx-auto p-4">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Navigate to="/chords" replace />} />
+
+          <Route path="/chords" element={<ChordsPage />} />
+          <Route path="/chords/:id" element={<ChordDetailsPage />} />
+
+          <Route path="/songs" element={<SongsPage />} />
+
+          <Route path="/profile" element={<ProfilePage />} />
+
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/chords" element={<ChordsPage />} />
-          <Route path="/chords/:chordId" element={<ChordDetailsPage />} />
-          <Route path="/songs" element={<SongsPage />} />
-          <Route path="/songs/:songId" element={<SongDetailsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+
+          {/* fallback 404 */}
           <Route
             path="*"
-            element={<div className="p-6 text-2xl text-red-600">404 Not Found</div>}
+            element={
+              <p className="text-center text-lg text-red-600">
+                {t("no_results")}
+              </p>
+            }
           />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  )
-}
+      </main>
+    </div>
+  );
+};
+
+export default App;
