@@ -1,20 +1,12 @@
-# Python
 __pycache__/
 *.py[cod]
 env/
 venv/
-
-# Node
 node_modules/
-dist/
-build/
-
-# Env & IDE
+dist/        # vite build-артефакты
 .env
 .vscode/
 .idea/
 .DS_Store
-
-# Media (generated)
 static/chords/
 static/songs/
