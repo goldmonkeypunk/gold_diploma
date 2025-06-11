@@ -7,19 +7,28 @@ services:
       POSTGRES_DB: chords_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
-    ports: ["5433:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   backend:
     build: ./backend
     env_file: .env.example
-    depends_on: [db]
-    ports: ["8000:80"]
+    depends_on:
+      - db
+    ports:
+      - "8000:80"
 
   frontend:
-    build: ./frontend
-    depends_on: [backend]
-    ports: ["3000:80"]
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=http://localhost:8000        # пробрасываем в vite build
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
 
 volumes:
   pgdata:
