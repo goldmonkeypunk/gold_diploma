@@ -33,8 +33,15 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install frontend dependencies
+      - name: Install base dependencies
         run: npm install --legacy-peer-deps --prefix frontend
+
+      # <--- новий крок: ставимо i18n-залежності, якщо їх досі нема --->
+      - name: Ensure i18n packages present
+        run: |
+          cd frontend
+          npm list i18next || npm install i18next react-i18next --legacy-peer-deps
+          cd ..
 
       - name: Build frontend
         run: npm run build --prefix frontend
