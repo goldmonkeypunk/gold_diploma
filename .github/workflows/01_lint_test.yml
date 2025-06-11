@@ -1,12 +1,14 @@
-name: lint-test
+name: ci
 
 on:
-  push:
-  pull_request:
+  push:            
+  pull_request:    # и каждый PR
 
 jobs:
+  # ───────────────────────── backend ─────────────────────────
   backend:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -14,17 +16,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install backend dependencies
         run: |
+          pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install pytest
+          pip install flake8 mypy
 
-      - name: Run backend unit tests
+      - name: Lint (flake8)
+        run: flake8 backend
+
+      - name: Static typing (mypy)
+        run: mypy backend
+
+      - name: Tests + coverage
         run: pytest backend/tests -q --cov=backend/app --cov-report=xml
 
+  # ───────────────────────── frontend ────────────────────────
   frontend:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -32,49 +44,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "20"
+          cache: "npm"
 
       - name: Install frontend dependencies
-        run: npm install --legacy-peer-deps --prefix frontend
+        run: npm install --legacy-peer-deps --prefix frontend"
 
       - name: Build frontend
         run: npm run build --prefix frontend
-name: lint-test
-
-on:
-  push:
-  pull_request:
-
-jobs:
-  backend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install backend dependencies
-        run: |
-          pip install -r backend/requirements.txt
-          pip install pytest
-
-      - name: Run backend unit tests
-        run: pytest backend/tests -q --cov=backend/app --cov-report=xml
-
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-
-      - name: Install frontend dependencies
-        run: npm install --legacy-peer-deps --prefix frontend
-
-      #
-      
