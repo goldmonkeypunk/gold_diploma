@@ -1,5 +1,4 @@
 from pathlib import Path
-import json
 from typing import List, Optional
 
 from fastapi import (
@@ -58,8 +57,7 @@ def create_song(
         raise HTTPException(404, "Не всі акорди знайдено")
 
     for c in chords:
-        link = SongChord(song_id=song.id, chord_id=c.id)
-        db.add(link)
+        db.add(SongChord(song_id=song.id, chord_id=c.id))
     db.commit()
     return {"id": song.id, "title": song.title}
 
@@ -144,9 +142,11 @@ def upload_sheet(
     song = db.query(Song).filter(Song.id == song_id).first()
     if not song:
         raise HTTPException(404, "Не знайдено")
+
     ext = Path(file.filename).suffix.lower()
     if ext not in {".png", ".jpg", ".jpeg", ".pdf"}:
         raise HTTPException(400, "Допустимі .png .jpg .jpeg .pdf")
+
     dst = STATIC_DIR / f"{song_id}_sheet{ext}"
     dst.write_bytes(file.file.read())
     song.sheet_url = f"/static/songs/{dst.name}"
@@ -166,9 +166,11 @@ def upload_audio(
     song = db.query(Song).filter(Song.id == song_id).first()
     if not song:
         raise HTTPException(404, "Не знайдено")
+
     ext = Path(file.filename).suffix.lower()
     if ext not in {".mp3", ".wav", ".ogg"}:
         raise HTTPException(400, "Допустимі .mp3 .wav .ogg")
+
     dst = STATIC_DIR / f"{song_id}_audio{ext}"
     dst.write_bytes(file.file.read())
     song.audio_url = f"/static/songs/{dst.name}"
@@ -188,7 +190,7 @@ def save_song(
         raise HTTPException(400, "Вже додано")
     db.add(UserSong(user_id=user.id, song_id=song_id))
     db.commit()
-    return {"msg": "Додано до збережених"}
+    return {"msg": "Додано"}
 
 
 @router.delete("/{song_id}/save")
@@ -204,7 +206,7 @@ def unsave_song(
         raise HTTPException(404, "Не збережено")
     db.delete(link)
     db.commit()
-    return {"msg": "Прибрано з обраного"}
+    return {"msg": "Прибрано"}
 
 
 @router.get("/me/saved")
