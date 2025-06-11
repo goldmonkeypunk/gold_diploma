@@ -1,1 +1,33 @@
+name: security-scan
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "Dockerfile*"
+      - ".github/workflows/02_security_scan.yml"
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.19.0
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+        continue-on-error: true       
+
+  dependabot-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - run: npm install --package-lock-only --legacy-peer-deps
+      - name: npm audit
+        run: npm audit --production --audit-level=high || true
 
