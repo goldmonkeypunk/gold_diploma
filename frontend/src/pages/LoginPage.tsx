@@ -1,47 +1,69 @@
-import React, { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuthContext } from "../context/AuthProvider"
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../hooks/useAuth";
 
-export default function LoginPage() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const navigate = useNavigate()
-  const { login } = useAuthContext()
+const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
-      await login(username, password)
-      navigate("/")
-    } catch {
-      alert("Помилка входу")
+      await login(username, password);
+      navigate("/profile");
+    } catch (err) {
+      setError("Auth failed");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Вхід</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <section className="flex flex-col items-center gap-4">
+      <h1 className="text-2xl font-bold">{t("login")}</h1>
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-3 w-64 text-sm"
+      >
         <input
-          className="w-full p-2 border rounded"
-          placeholder="username"
+          className="border rounded p-2"
+          type="text"
+          placeholder={t("username")}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
+
         <input
-          className="w-full p-2 border rounded"
+          className="border rounded p-2"
           type="password"
-          placeholder="password"
+          placeholder={t("password")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
+        {error && <p className="text-red-600">{error}</p>}
+
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+          disabled={loading}
+          className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-          Увійти
+          {loading ? t("loading") : t("login")}
         </button>
       </form>
-    </div>
-  )
-}
+    </section>
+  );
+};
+
+export default LoginPage;
