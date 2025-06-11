@@ -3,38 +3,40 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
-import { ChordDTO } from "../../api/chords";          // путь поправь при необходимости
-// import LoadingSpinner from "../../components/LoadingSpinner"; // если есть свой спиннер
+import { ChordDTO } from "../../api/chords";
 
 const ChordDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [chord, setChord] = useState<ChordDTO | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // ⬇️ корректный generic
+  const { id } = useParams<'id'>();
+
+  const [chord, setChord]   = useState<ChordDTO | null>(null);
+  const [error, setError]   = useState<string | null>(null);
+  const [loading, setLoad ] = useState(true);
 
   useEffect(() => {
     if (!id) return;
 
-    async function fetchOne() {
+    (async () => {
       try {
         const { data } = await axios.get<ChordDTO>(`/api/chords/${id}`);
         setChord(data);
       } catch (e) {
-        setError("Не удалось загрузить акорд");
+        setError("Не удалось загрузить аккорд");
         console.error(e);
+      } finally {
+        setLoad(false);
       }
-    }
-
-    fetchOne();
+    })();
   }, [id]);
 
-  if (error) return <p className="text-red-600">{error}</p>;
-  if (!chord) return <p>Загрузка…</p>;               // или <LoadingSpinner />
+  if (loading) return <p>Загрузка…</p>;
+  if (error)   return <p className="text-red-600">{error}</p>;
+  if (!chord)  return null;
 
   return (
     <section className="p-4">
       <h1 className="text-2xl font-bold mb-4">{chord.name}</h1>
       <pre className="bg-gray-100 p-2 rounded">{JSON.stringify(chord, null, 2)}</pre>
-      {/* TODO: заменить JSON на нормальное отображение */}
     </section>
   );
 };
