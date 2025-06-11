@@ -1,53 +1,70 @@
-import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import axios from "axios";
 
-import { listChords, ChordDTO } from "../../api/chords";
-import ChordCard from "../../components/ChordCard";
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? "/api",
+  withCredentials: false,
+  headers: { "Content-Type": "application/json" }
+});
 
-const ChordsPage: React.FC = () => {
-  const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const [chords, setChords] = useState<ChordDTO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export interface ChordDTO {
+  id: number;
+  name: string;
+  strings: number[];          // шість значень: -1 або 0-24
+  description: string | null;
+  image_url: string | null;
+  audio_url: string | null;
+}
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await listChords({ search });
-        setChords(data);
-      } catch {
-        setError("Load error");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [search]);
+/* ──────────────── Список та деталі ──────────────── */
 
-  return (
-    <section className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">{t("chords")}</h1>
+export interface ChordFilter {
+  search?: string;
+}
 
-      <input
-        type="text"
-        className="border rounded p-2 w-64"
-        placeholder={t("search")}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+/** Отримати список акордів (з фільтром пошуку) */
+export async function listChords(params: ChordFilter = {}) {
+  const res = await api.get<ChordDTO[]>("/chords", { params });
+  return res.data;
+}
 
-      {loading && <p>{t("loading")}</p>}
-      {error && <p className="text-red-600">{error}</p>}
+/** Отримати один акорд за ID */
+export async function getChord(id: number) {
+  const res = await api.get<ChordDTO>(`/chords/${id}`);
+  return res.data;
+}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {chords.map((c) => (
-          <ChordCard key={c.id} id={c.id} name={c.name} strings={c.strings} />
-        ))}
-      </div>
-    </section>
-  );
-};
+/* ──────────────── CRUD (ADMIN) ──────────────── */
 
-export default ChordsPage;
+export async function createChord(payload: Omit<ChordDTO, "id">) {
+  const res = await api.post<ChordDTO>("/chords", payload);
+  return res.data;
+}
+
+export async function updateChord(
+  id: number,
+  payload: Partial<Omit<ChordDTO, "id">>
+) {
+  const res = await api.patch<ChordDTO>(`/chords/${id}`, payload);
+  return res.data;
+}
+
+export async function deleteChord(id: number) {
+  await api.delete(`/chords/${id}`);
+}
+
+/* ──────────────── Збережені акорди користувача ──────────────── */
+
+export async function getSavedChords() {
+  const res = await api.get<ChordDTO[]>("/chords/me/saved");
+  return res.data;
+}
+
+export async function saveChord(id: number) {
+  await api.post(`/chords/${id}/save`);
+}
+
+export async function unsaveChord(id: number) {
+  await api.delete(`/chords/${id}/save`);
+}
+
+export default api;
