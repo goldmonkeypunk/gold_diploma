@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # --------------------------- DB ---------------------------
   db:
     image: postgres:15-alpine
     environment:
@@ -8,27 +9,29 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
     ports:
-      - "5433:5432"
+      - "5433:5432"                 # localhost:5433 → контейнер:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  # ------------------------- BACKEND ------------------------
   backend:
     build: ./backend
-    env_file: .env.example
+    env_file: .env.example          # берёт JWT, DATABASE_URL и т.д.
     depends_on:
       - db
     ports:
-      - "8000:80"
+      - "8000:80"                   # localhost:8000 → Uvicorn:80
 
+  # ------------------------ FRONTEND ------------------------
   frontend:
     build:
       context: ./frontend
       args:
-        - VITE_API_URL=http://localhost:8000        # пробрасываем в vite build
+        - VITE_API_URL=http://localhost:8000   # будет заменено в build-time
     depends_on:
       - backend
     ports:
-      - "3000:80"
+      - "3000:80"                   # localhost:3000 → Nginx:80
 
 volumes:
   pgdata:
